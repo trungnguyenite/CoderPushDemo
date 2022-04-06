@@ -6,7 +6,8 @@ import {
 
 var scrW = Math.round(Dimensions.get('window').width)
 var scrH = Math.round(Dimensions.get('window').height)
-
+var avatarW = scrW-30
+var avatarH = scrH-200
 
 module.exports = StyleSheet.create({
 	
@@ -15,15 +16,17 @@ module.exports = StyleSheet.create({
 		flex: 1
 	},
 	info: {
-		alignSelf:'center'
+		position:'absolute',
+		//alignSelf:'center',
 	},
 	avatarImg: {
-		width: scrW-30, 
-		height: scrH-200, 
+		alignSelf:'center',
+		width: avatarW, 
+		height: avatarH, 
 		borderRadius: 20
 	},
 	avatarView: {
-		position: 'absolute', 
+		position: 'absolute',
 		left: 10, 
 		bottom:20
 	},
@@ -44,7 +47,7 @@ module.exports = StyleSheet.create({
 	},
 	statusText: {
 		fontSize:17, 
-		fontWeight: '300', 
+		fontWeight: '400', 
 		color:'white'
 	},
 	pagerView: {

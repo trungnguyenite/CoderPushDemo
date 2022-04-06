@@ -6,8 +6,17 @@ let headers = {
 
 export class RESTFulAPI {
 
-	async coderPushDemo() {
-		let api = 'https://dummyapi.io/data/v1/user?limit=10'
+	async coderPushDemo(n) {
+		let api = 'https://dummyapi.io/data/v1/user?limit=' + n
+
+		headers['Content-Type'] = 'application/json'
+		headers['app-id'] = '623fcf75b800b233c3f94aaa'
+
+		return this.fetchData(api, 'GET', null);
+	}
+
+	async getAge(id) {
+		let api = 'https://dummyapi.io/data/v1/user/' + id
 
 		headers['Content-Type'] = 'application/json'
 		headers['app-id'] = '623fcf75b800b233c3f94aaa'

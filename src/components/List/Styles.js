@@ -26,7 +26,8 @@ module.exports = StyleSheet.create({
 	},
 	firstName: {
 		fontSize: 20, 
-		fontWeight: '500', 
+		fontWeight: '500',
+		color: 'black'
 	},
 	statusView: {
 		flexDirection: 'row', 
@@ -40,8 +41,9 @@ module.exports = StyleSheet.create({
 		backgroundColor: 'green'
 	},
 	statusText: {
-		fontSize:20, 
-		fontWeight: '300', 
+		fontSize:17, 
+		fontWeight: '300',
+		color: 'black'
 	},
 	listItem: {
 		marginTop: 10, 
