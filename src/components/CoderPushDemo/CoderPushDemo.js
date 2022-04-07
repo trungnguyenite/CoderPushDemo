@@ -2,7 +2,7 @@ import React, { Component } from "react";
 
 import {
 	View, Text, Dimensions, Image,
-	TouchableOpacity, Animated, PanResponder, ActivityIndicator
+	TouchableOpacity, Animated, PanResponder, ActivityIndicator, TouchableWithoutFeedback
 } from "react-native";
 
 import styles from './Styles';
@@ -14,7 +14,7 @@ import FlipPage, { FlipPagePage } from 'react-native-flip-page';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { rotateY } from "react-native-flip-page/src/transform-utils";
 import moment from 'moment';
-
+import { PanGestureHandler } from "react-native-gesture-handler";
 
 
 var scrW = Math.round(Dimensions.get('window').width)
@@ -82,6 +82,7 @@ export default class CoderPushDemo extends React.Component {
 			currentPage: 0,
 			orientation: true,
 			loadMore: false,
+			locationXOnPressIn: null
 		}
 	}
 
@@ -115,19 +116,6 @@ export default class CoderPushDemo extends React.Component {
 				var translate = new Animated.Value((scrW-avatarW)/2) //new Animated.ValueXY().x
 				var translate2 = new Animated.Value(0) //new Animated.ValueXY().x
 				var zIndex = new Animated.Value(this.state.data.length-1 - i)
-				var panResponder = PanResponder.create({
-					onMoveShouldSetPanResponder: () => true,
-					onPanResponderMove: /* Animated.event([
-					  null,
-					  { dx: translate, dy: 0 }
-					]), */
-					() => {
-						alert('')
-					},
-					onPanResponderRelease: () => {
-					  alert('')
-					}
-				  })
 
 				this.state.data[i].rotate = rotate
 				this.state.data[i].rotateInterpolate = rotateInterpolate
@@ -136,8 +124,6 @@ export default class CoderPushDemo extends React.Component {
 				this.state.data[i].translate = translate
 				this.state.data[i].translate2 = translate2
 				this.state.data[i].zIndex = zIndex
-				this.state.data[i].panResponder = panResponder
-				
 			}
 			
 			this.forceUpdate()
@@ -253,7 +239,7 @@ export default class CoderPushDemo extends React.Component {
 				this.state.currentPage = 0
 			this.refs.pagerView.setPage(this.state.currentPage) */
 
-			await this.animation(scrW/2 + 1, orientation)
+			await this.animation(this.state.locationXOnPressIn - 1, orientation)
 		}
 		catch(e){
 			alert('####EXCEPTION: CoderPushDemo/nextPage(orientation): ' + e)
@@ -272,7 +258,7 @@ export default class CoderPushDemo extends React.Component {
 				this.state.currentPage = this.state.data.length - 1
 			this.refs.pagerView.setPage(this.state.currentPage) */
 
-			await this.animation(scrW/2, true)
+			await this.animation(this.state.locationXOnPressIn + 1, true)
 		}
 		catch(e){
 			alert('####EXCEPTION: CoderPushDemo/previosPage(orientation): ' + e)
@@ -289,14 +275,18 @@ export default class CoderPushDemo extends React.Component {
 		}
 	}
 
-	async animation(x, orientation) {
-		
+	async animation(locationXOnPressOut, orientation) {
+
 		try{
+			if(this.state.animating)
+				return
+			this.state.animating = true
+
 			if(this.state.loadMore)
 				return
 
 			var left
-			if(x <= scrW/2){
+			if(locationXOnPressOut > this.state.locationXOnPressIn){
 				left = true
 
 				if(this.state.currentPage > 0)
@@ -314,8 +304,10 @@ export default class CoderPushDemo extends React.Component {
 							useNativeDriver: false
 						}).start()
 					})
-				else
+				else{
+					this.state.animating = false
 					return
+				}
 			}
 			else{
 				left = false
@@ -327,8 +319,10 @@ export default class CoderPushDemo extends React.Component {
 						duration: 0,
 						useNativeDriver: false
 					}).start()
-				else
+				else{
+					this.state.animating = false
 					return
+				}
 			}
 		
 			var _currentPage = this.state.currentPage
@@ -404,6 +398,8 @@ export default class CoderPushDemo extends React.Component {
 						}).start()
 				}
 			}
+
+			this.state.animating = false
 		}
 		catch(e){
 			alert('####EXCEPTION: CoderPushDemo/animation(): ' + e)
@@ -417,9 +413,7 @@ export default class CoderPushDemo extends React.Component {
 		try{
 			var dataRender = this.state.data.map((e, i) =>
 					
-				<Animated.View style={[styles.info, {zIndex:e.zIndex, left:e.translate, top:e.translate2, opacity:e.opacity, transform:[{rotateY:e.rotateInterpolate}, {scaleX:e.scale}] } ]}
-					{...e.panResponder.panHandlers}
-				>
+				<Animated.View style={[styles.info, {zIndex:e.zIndex, left:e.translate, top:e.translate2, opacity:e.opacity, transform:[{rotateY:e.rotateInterpolate}, {scaleX:e.scale}] } ]}>
 					<Image
 						source={{uri: e.picture}}
 						style={styles.avatarImg}
@@ -443,15 +437,21 @@ export default class CoderPushDemo extends React.Component {
 			
 			<View style={styles.container}>
 
-				<TouchableOpacity style={{width:scrW, height:scrH-200, justifyContent:'center'}} activeOpacity={1} onPress={async(e)=> await this.animation(e.nativeEvent.locationX, true)}>
-					{dataRender}
+				<TouchableWithoutFeedback
+					style={{width:scrW, height:avatarH}}
+					activeOpacity={1}
+					onPressIn={(e)=> this.state.locationXOnPressIn = e.nativeEvent.locationX}
+					onPressOut={async(e)=> await this.animation(e.nativeEvent.locationX, true)}>
+						<View>
+							{dataRender}
 
-					{this.state.loadMore ? (//alert('x'),
-					
-						<ActivityIndicator size='large' color='#999999' style={{position:'absolute', zIndex:this.state.data.length, alignSelf:'center'}} />
-						
-					) : null}
-				</TouchableOpacity>
+							{this.state.loadMore ? (//alert('x'),
+							
+								<ActivityIndicator size='large' color='#999999' style={{position:'absolute', zIndex:this.state.data.length, alignSelf:'center', top:avatarH/2}} />
+								
+							) : null}
+						</View>
+				</TouchableWithoutFeedback>
 				
 				<View style={styles.action}>
 					<TouchableOpacity style={styles.previos} onPress={async() => await this.previosPage(true)}>
@@ -478,7 +478,7 @@ export default class CoderPushDemo extends React.Component {
 						<Text style={styles.statusText}> Liked List</Text>
 					</TouchableOpacity>
 				</View>
-				
+
 			</View>
 
 		);
